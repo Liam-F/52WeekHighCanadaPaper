@@ -6,20 +6,9 @@
 #' Following is a replication based on the [The 52-Week High and Momentum Investing](http://www.bauer.uh.edu/tgeorge/papers/gh4-paper.pdf)
 #' paper applied to Canadian Markets.
 #'
-#' The
-#' 
-#' First an Artificial Example demonstrates the impact of taxes by exploring the difference between
-#' long-term and short-term capital gain taxes.
-#' 
-#' Suppose we have two identical assets, two clones of SPY for this example. 
-#' Consider an annually re-balanced strategy that does 100% turnover by moving from one SPY clone to another.
-#'
-#' The OneYear strategy does the re-balance at the end of the year, hence it is subject to the short-term capital gain tax.
-#' The OneYearOneDay strategy does re-balance at one year plus one day, hence it is subject to the long-term capital gain tax.
-#'
 
 
-#+ echo=T
+#+ echo=F
 #*****************************************************************
 # Main
 #*****************************************************************
@@ -195,12 +184,33 @@ create.models = function(obj, data, open, models = list()) {
 	models
 }
 
-#models = create.models(obj, data, open)
+models = create.models(obj, data, open)
 
 
+#'
+#' The Equal Weighted(ew) and Market Cap Weighted(mcw) benchmarks:
+#'
 
 
+#+ echo=F
+#*****************************************************************
+# Create report
+#*****************************************************************
+plotbt(models, plotX = T, log = 'y', LeftMargin = 3, main = NULL)	    	
+	mtext('Cumulative Performance', side = 2, line = 1)
+	
+print(plotbt.strategy.sidebyside(models, make.plot=F, return.table=T))
 
+
+#'
+#' Performance Across various sectors:
+#'
+
+
+#+ echo=F
+#*****************************************************************
+# Create model for each sector
+#*****************************************************************
 # do back-test for each sector; there are not enough members in each industry. i.e. sort(tapply(rep(1,nrow(info)),info$sector,sum))
 models.sector = list()
 sectors = unique(info$sector)
@@ -220,6 +230,14 @@ for(sector in sectors)
 	sector.prices[,sector] = models.sector[[sector]]$equity
 
 #plota.matplot(sector.prices)
+#*****************************************************************
+# Create report
+#*****************************************************************
+plotbt(models.sector, plotX = T, log = 'y', LeftMargin = 3, main = NULL)	    	
+	mtext('Cumulative Performance', side = 2, line = 1)
+	
+print(plotbt.strategy.sidebyside(models.sector, make.plot=F, return.table=T))
+
 
 
 	
@@ -402,15 +420,33 @@ obj$weights$MG.6.1.spread = signal.top - signal.bot
 
 obj$weights$MG.6.6.spread = hold.position(signal.top, 6) - hold.position(signal.bot, 6)
 
+models = create.models(obj, data, open)
 
+#'
+#' Performance of Selected Models:
+#'
+
+
+#+ echo=F
+#*****************************************************************
+# Create report
+#*****************************************************************
+plotbt(models, plotX = T, log = 'y', LeftMargin = 3, main = NULL)	    	
+	mtext('Cumulative Performance', side = 2, line = 1)
+	
+print(plotbt.strategy.sidebyside(models, make.plot=F, return.table=T))
+
+
+#'
+#' Summary CAGR Performance table:
+#'
+
+#+ echo=F
 #*****************************************************************
 # Report
 #*****************************************************************
-models = create.models(obj, data, open)
-	
 stats = plotbt.strategy.sidebyside(models, make.plot=F, return.table=T)
-	
-cagr = sapply(stats['Cagr',],as.numeric)	
+	cagr = sapply(stats['Cagr',],as.numeric)	
 	
 
 print(cagr[spl('ew,mcw')])
@@ -428,13 +464,6 @@ colnames(temp) = spl('Top,Middle,Bottom,Spread')
 print(temp)
 
 	
-
-
-
-
-
-
-
 #'
 #' References:
 #' ----

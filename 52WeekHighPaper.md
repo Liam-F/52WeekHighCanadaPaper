@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 52 Week High Paper
+title: 52 Week High Canada Paper
 ---
 To install [Systematic Investor Toolbox (SIT)](https://github.com/systematicinvestor/SIT) please visit [About](/about) page.
 
@@ -13,402 +13,68 @@ paper applied to Canadian Markets.
 
 
 
-{% highlight r %}
-#*****************************************************************
-# Main
-#*****************************************************************
-library(SIT)
-library(quantmod)
-library(data.table)
-# if using data.table
-last = function(x,...) xts::last(x,...)
-#file.mtime = function(f) file.info(f)$mtime
 
-source('52WeekHighPaper.Utils.r',T)
+The Equal Weighted(ew) and Market Cap Weighted(mcw) benchmarks:
 
 
+![plot of chunk plot-3](/public/images/52WeekHighPaper/plot-3-1.png) 
 
-data.filename = 'tsx.btdata.Rdata'
+|           |ew                |mcw               |
+|:----------|:-----------------|:-----------------|
+|Period     |Jan1998 - May2016 |Jan1998 - May2016 |
+|Cagr       |17.84             |10.21             |
+|Sharpe     |1.25              |0.69              |
+|DVR        |1.13              |0.66              |
+|Volatility |13.86             |15.77             |
+|MaxDD      |-44.31            |-43.56            |
+|AvgDD      |-1.63             |-2.2              |
+|VaR        |-1.3              |-1.53             |
+|CVaR       |-2.14             |-2.41             |
+|Exposure   |99.53             |99.53             |
+    
 
-if(!file.exists(data.filename)) {
-	# get current universe
-	info = data.52week.high.universe()		 
 
+Performance Across various sectors:
 
-	# urls = hist.quotes.url(paste0(info$ticker,":CA"), '1992-11-01', '2016-05-15', 'quotemedia')
-	# cat(urls, sep='\n', file='links.txt')
-	# wget.exe -e robots=off -U "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0" --no-check-certificate --referer=http://www.quotemedia.com;auto -i links.txt
-	# 
-	# folder = paste(getwd(), 'temp', '', sep='/')
-	# download.web.data(urls, info$ticker, folder, list(
-	#			download.agent = 'aria',
-	#			refer = 'http://www.quotemedia.com;auto',
-	#			clean.folder.before.download = T)
-	#		)
-	# get prices
-	data = env()
-	for(ticker in info$ticker) {
-		#filename = paste0('temp/getHistoryDownload.csv@webmasterId=501&symbol=', ticker,'%3ACA&startMonth=10&startDay=01&startYear=1992&endMonth=04&endDay=15&endYear=2016&isRanged=true')	
-		filename = paste0('temp/', ticker)	
-		data[[ticker]] = data.quotemedia.price(filename = filename)
-	}
 
-	#CIG
-	#2015-05-27,45.00,50.00,45.00,47.50,700,47.444,316566.55%,47.4588,32750.00,4
+![plot of chunk plot-4](/public/images/52WeekHighPaper/plot-4-1.png) 
 
-	# CIG history is bad; get it from Yahoo
-	filename = 'temp/CIG.TO'
-	if(!file.exists(filename)) 
-		write.file(get.url(hist.quotes.url('CIG.TO', '1992-11-01', '2016-05-15', 'yahoo'),referer='http://ichart.finance.yahoo.com;auto'), file=filename)
-	out = read.xts(filename)
-		out$Adjusted = out$Adj_Close
-	data$CIG = out
+|           |Energy            |Industrials       |Basic Materials   |Financial Services |Utilities         |Consumer Defensive |Real Estate       |Consumer Cyclical |Communication Services |Technology        |Healthcare        |
+|:----------|:-----------------|:-----------------|:-----------------|:------------------|:-----------------|:------------------|:-----------------|:-----------------|:----------------------|:-----------------|:-----------------|
+|Period     |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016  |Jan1998 - May2016 |Jan1998 - May2016  |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016      |Jan1998 - May2016 |Jan1998 - May2016 |
+|Cagr       |12.03             |12.78             |7.09              |11.8               |8.4               |4.84               |14.12             |8.05              |6.9                    |10.46             |8.07              |
+|Sharpe     |0.75              |0.87              |0.44              |0.63               |0.53              |0.32               |0.79              |0.47              |0.4                    |0.58              |0.54              |
+|DVR        |0.69              |0.71              |0.36              |0.6                |0.49              |0.26               |0.75              |0.39              |0.23                   |0.5               |0.42              |
+|Volatility |17.2              |15.2              |20.12             |21.39              |18.67             |23.05              |18.87             |21.65             |22.98                  |21.14             |16.9              |
+|MaxDD      |-41.08            |-41.29            |-50.87            |-44.72             |-37.91            |-57.22             |-49.31            |-60.35            |-62.83                 |-53.83            |-49.85            |
+|AvgDD      |-2.58             |-1.98             |-2.96             |-3.19              |-2.72             |-4.69              |-2.23             |-3.54             |-4.86                  |-3.31             |-2.77             |
+|VaR        |-1.61             |-1.45             |-1.95             |-2.01              |-1.71             |-2.21              |-1.82             |-2                |-2.23                  |-1.97             |-1.65             |
+|CVaR       |-2.58             |-2.21             |-2.94             |-3.15              |-2.75             |-3.32              |-2.79             |-3.28             |-3.28                  |-3.14             |-2.42             |
+|Exposure   |99.53             |99.53             |99.53             |99.53              |99.53             |99.53              |99.53             |99.53             |99.53                  |99.53             |99.53             |
+    
 
 
-	for(ticker in ls(data)) 
-		data[[ticker]] = make.stock.xts(data[[ticker]])
-	 
-	save(info, data, file = data.filename)
-}
-load(file = data.filename) 
+Performance of Selected Models:
 
 
+![plot of chunk plot-5](/public/images/52WeekHighPaper/plot-5-1.png) 
 
+|           |ew                |mcw               |JT.6.1.top        |JT.6.6.top        |JT.6.1.bot        |JT.6.6.bot        |JT.6.1.mid        |JT.6.6.mid        |JT.6.1.spread     |JT.6.6.spread     |high52w.1.top     |high52w.6.top     |high52w.1.bot     |high52w.6.bot     |high52w.1.mid     |high52w.6.mid     |high52w.1.spread  |high52w.6.spread  |MG.6.1.top        |MG.6.6.top        |MG.6.1.bot        |MG.6.6.bot        |MG.6.1.mid        |MG.6.6.mid        |MG.6.1.spread     |MG.6.6.spread     |
+|:----------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|
+|Period     |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |Jan1998 - May2016 |
+|Cagr       |17.84             |10.21             |23.35             |22.44             |15.6              |17.21             |13.42             |14.16             |4.28              |2.91              |15.91             |15.59             |18.66             |19.66             |16.19             |15.15             |-5.88             |-6.42             |13.86             |14                |12.05             |12.58             |12.1              |12.68             |1.23              |1.08              |
+|Sharpe     |1.25              |0.69              |1.44              |1.4               |0.83              |1                 |1.04              |1.15              |0.32              |0.28              |1.35              |1.29              |0.9               |1                 |1.19              |1.15              |-0.23             |-0.34             |1.2               |1.24              |0.98              |1.12              |1.05              |1.1               |0.2               |0.22              |
+|DVR        |1.13              |0.66              |1.23              |1.24              |0.75              |0.89              |0.94              |1.05              |0.14              |0.05              |1.16              |1.16              |0.79              |0.88              |1.09              |1.04              |-0.19             |-0.28             |1.04              |1.08              |0.85              |0.98              |0.95              |0.98              |0.01              |0.05              |
+|Volatility |13.86             |15.77             |15.38             |15.3              |19.83             |17.43             |12.96             |12.12             |18.03             |13.4              |11.39             |11.71             |21.56             |19.86             |13.34             |12.93             |18.54             |15.69             |11.33             |11.08             |12.44             |11.15             |11.44             |11.43             |7.86              |5.55              |
+|MaxDD      |-44.31            |-43.56            |-40.81            |-45.69            |-56.51            |-50.24            |-43.56            |-41.54            |-51.94            |-54.32            |-36.73            |-40.91            |-55.3             |-50.07            |-47.74            |-47.19            |-80.95            |-77.7             |-38.97            |-38.98            |-38.64            |-33.07            |-37.39            |-38.43            |-33.25            |-28.59            |
+|AvgDD      |-1.63             |-2.2              |-2.14             |-1.85             |-2.64             |-2.55             |-1.4              |-1.33             |-5.87             |-2.92             |-1.47             |-1.32             |-3.08             |-2.95             |-1.38             |-1.43             |-28.52            |-26.51            |-1.33             |-1.21             |-1.53             |-1.38             |-1.28             |-1.23             |-1.91             |-1.55             |
+|VaR        |-1.3              |-1.53             |-1.47             |-1.46             |-1.86             |-1.65             |-1.22             |-1.14             |-1.73             |-1.33             |-1.1              |-1.07             |-2.1              |-1.95             |-1.23             |-1.22             |-1.9              |-1.63             |-1.1              |-1.07             |-1.16             |-1.09             |-1.09             |-1.09             |-0.75             |-0.57             |
+|CVaR       |-2.14             |-2.41             |-2.33             |-2.33             |-3.01             |-2.56             |-2.02             |-1.88             |-2.8              |-2.09             |-1.78             |-1.84             |-3.18             |-2.91             |-2.04             |-2.03             |-2.9              |-2.5              |-1.76             |-1.78             |-1.93             |-1.73             |-1.79             |-1.8              |-1.13             |-0.82             |
+|Exposure   |99.53             |99.53             |96.74             |96.74             |96.74             |96.74             |96.74             |96.74             |96.74             |96.74             |94.44             |94.44             |94.44             |94.44             |94.44             |94.44             |94.44             |94.44             |96.74             |96.74             |96.74             |96.74             |96.74             |96.74             |96.74             |96.74             |
+    
 
 
-
-clean.data.filename = 'tsx.btdata.clean.Rdata'
-
-if(!file.exists(clean.data.filename)) {
-
-	for(i in 1:2) {
-		cat(i, 'itteration of data cleaning', '\n')
-		data.clean(data, min.ratio=1.6, min.obs=0*252) 
-	}
-
-	# examine effect of cleaning
-	#temp = env()
-	#temp$A = make.stock.xts(data$RY)
-	#data.clean(temp, min.ratio=1.6, min.obs=0*252) 
-	#layout(1:2)
-	#plota(Ad(temp$A),type='l')
-	#plota(Cl(temp$A),type='l')
-
-	data.copy = env(data)
-
-	# compute implied dividends and splits from adjusted quotes
-	bt.unadjusted.add.div.split(data.copy, infer.div.split.from.adjusted=T)	
-
-	# set implied number of shares given current number of shares and splits
-	bt.unadjusted.set.nshare(data.copy)
-
-		
-		
-	for(i in data$symbolnames) data[[i]] = adjustOHLC(data[[i]], use.Adjusted=T)
-		
-	# we could have used data$X$Adjusted * info['X','nshare']
-	# but it is not accurate since Adjusted includes both dividends and splits
-	for(ticker in data$symbolnames)
-		data[[ticker]]$MCap = data.copy[[ticker]]$Share * data.copy[[ticker]]$Close
-
-			
-			
-	bt.prep(data, align='keep.all', fill.gaps = T)
-
-	# start in 1998 since we have 100 companies in universe
-	# which(count(t(data$prices)) > 100)[1]	
-	data = bt.prep.trim(data, '1998::')
-
-	save(info, data, file = clean.data.filename)
-}
-
-load(file = clean.data.filename)
-
-
-
-#*****************************************************************
-# Setup
-#*****************************************************************
-data$universe = ifna(data$prices > 0, F)
-
-
-prices = data$prices * data$universe
-	n = ncol(prices)
-	nperiods = nrow(prices)
-
-# form signal at the month end using closing prices; execute next day at the open
-calc.offset = 0
-do.lag = 2
-
-open = bt.apply(data, function(x) ifna.prev(x[,'Open']))
-	# some open prices are 0 - strange; replace with close
-	open = iif(open == 0, prices, open)
-		
-	
-mcap = bt.apply(data, function(x) ifna.prev(x[,'MCap']))
-	mcap = ifna(mcap, 0)
-
-period.ends = date.ends(prices,'months') + calc.offset
-	period.ends = period.ends[(period.ends > 0) & (period.ends <= nperiods)]
-	nperiod.ends = len(period.ends)
-
-
-#*****************************************************************
-# Benchmark(s)
-#*****************************************************************
-obj = lst(period.ends, weights = list())
-
-
-if( F ) {
-# trade at close
-data$weight[] = NA
-	data$execution.price[] = NA
-	data$weight[period.ends,] =  ntop(prices[period.ends,], n)	
-models$ew.c = bt.run.share.ex(data, clean.signal=F, silent=F,trade.summary=T)
-
-data$weight[] = NA
-	data$execution.price[] = NA
-	data$weight[period.ends,] =  (mcap / rowSums(mcap))[period.ends,]
-models$mcw.c = bt.run.share.ex(data, clean.signal=F, silent=F)
-}
-
-
-obj$weights$ew = ntop(prices[period.ends,], n)
-
-obj$weights$mcw = (mcap / rowSums(mcap))[period.ends,]
-
-
-# Evaluate given strategies; should be run in parallel to save time
-create.models = function(obj, data, open, models = list()) {
-	for(n in  names(obj$weights)) {
-		data$weight[] = NA
-			data$execution.price = open
-			data$weight[period.ends,] = obj$weights[[n]]
-		models[[n]] = bt.run.share.ex(data, clean.signal=F, silent=T, do.lag=do.lag, trade.summary=F)
-	}
-	models
-}
-
-#models = create.models(obj, data, open)
-
-
-
-
-
-# do back-test for each sector; there are not enough members in each industry. i.e. sort(tapply(rep(1,nrow(info)),info$sector,sum))
-models.sector = list()
-sectors = unique(info$sector)
-nsectors = len(sectors)
-
-for(sector in sectors) {
-	index = info$sector==sector
-	data$weight[] = NA
-		data$execution.price = open
-		data$weight[period.ends, index] =  (mcap[,index] / rowSums(mcap[,index]))[period.ends,]
-	models.sector[[sector]] = bt.run.share.ex(data, clean.signal=F, silent=T, do.lag=do.lag)
-}
-
-sector.prices = prices[,1:len(sectors)]
-	colnames(sector.prices) = sectors
-for(sector in sectors)
-	sector.prices[,sector] = models.sector[[sector]]$equity
-
-#plota.matplot(sector.prices)
-
-
-	
-	
-#*****************************************************************
-# Helper functions
-#*****************************************************************
-# compute quantiles
-position.score.quantile = function(position.score, n.quantiles, min.n = n.quantiles / 2) {
-	position.score = coredata(position.score)
-		nposition.score = nrow(position.score)	
-	quantiles = position.score * NA			
-	
-	for( i in 1:nposition.score ) {
-		score = position.score[i,]
-		ncount = count(score)
-		if( ncount > min.n )
-			quantiles[i,] = ceiling(n.quantiles * rank(score, na.last = 'keep','first') / ncount)
-		else 
-			quantiles[i,] = NA	
-	}
-	quantiles
-}
-
-# hold position for given number of periods
-hold.position = function(signal, nhold=1) {
-	if( nhold == 1 ) return(signal)
-	
-	signal.n = signal
-	for(i in 1:(nhold-1))
-		signal.n = signal.n + mlag(signal, i)
-	signal.n = signal.n / nhold
-	signal.n
-}
-
-#*****************************************************************
-# Strategy
-#*****************************************************************
-#
-# JT(N,K): N months formation period and K months holding period
-# will simulate K overlapping strategies with 1/K allocation
-#		
-
-# N months formation period: compute 6 month price change
-position.score = bt.apply.matrix.ex(prices, function(x) x/mlag(x,6), period.ends=period.ends) 
-
-# bottom 30%
-#rowSums(quantiles <= 3, na.rm=T)
-# top 30%
-#rowSums(quantiles > 7, na.rm=T)
-
-# split into 10 quantiles
-quantiles = position.score.quantile(position.score[period.ends,], 10)
-
-# top 30%
-signal.top = ntop(quantiles > 7, n)	
-
-obj$weights$JT.6.1.top = signal.top
-
-obj$weights$JT.6.6.top = hold.position(signal.top, 6)
-
-
-# rowSums(models$top30.6$share[period.ends,]>0)
-# rowSums(models$top30$share[period.ends,]>0)
-
-
-# bottom 30%
-signal.bot = ntop(quantiles <= 3, n)	
-
-obj$weights$JT.6.1.bot = signal.bot
-
-obj$weights$JT.6.6.bot = hold.position(signal.bot, 6)
-
-
-# middle 40%
-signal.mid = ntop(quantiles > 3 & quantiles <= 7, n)	
-
-obj$weights$JT.6.1.mid = signal.mid
-
-obj$weights$JT.6.6.mid = hold.position(signal.mid, 6)
-
-
-# spread
-obj$weights$JT.6.1.spread = signal.top - signal.bot
-
-obj$weights$JT.6.6.spread = hold.position(signal.top, 6) - hold.position(signal.bot, 6)
-
-
-
-
-#*****************************************************************
-# Strategy
-#*****************************************************************
-#
-# 52 week high
-#		
-
-# 52 week high
-high52w = bt.apply.matrix(prices, runMax, 252)
-	position.score = prices / high52w
-
-# split into 10 quantiles
-quantiles = position.score.quantile(position.score[period.ends,], 10)
-
-# top 30%
-signal.top = ntop(quantiles > 7, n)	
-
-obj$weights$high52w.1.top = signal.top
-
-obj$weights$high52w.6.top = hold.position(signal.top, 6)
-
-# bottom 30%
-signal.bot = ntop(quantiles <= 3, n)	
-
-obj$weights$high52w.1.bot = signal.bot
-
-obj$weights$high52w.6.bot = hold.position(signal.bot, 6)
-
-# middle 40%
-signal.mid = ntop(quantiles > 3 & quantiles <= 7, n)	
-
-obj$weights$high52w.1.mid = signal.mid
-
-obj$weights$high52w.6.mid = hold.position(signal.mid, 6)
-
-
-# spread
-obj$weights$high52w.1.spread = signal.top - signal.bot
-
-obj$weights$high52w.6.spread = hold.position(signal.top, 6) - hold.position(signal.bot, 6)
-
-
-#*****************************************************************
-# Strategy
-#*****************************************************************
-#
-# MG industrial momentum ( N,K): N months formation period and K months holding period
-# will simulate K overlapping strategies with 1/K allocation
-#		
-
-# N months formation period: compute 6 month price change
-position.score = bt.apply.matrix.ex(sector.prices, function(x) x/mlag(x,6), period.ends=period.ends) 
-
-
-# split into 11 quantiles, since there are 11 sectors
-sector.quantiles = position.score.quantile(position.score[period.ends,], nsectors)
-
-# map sector quantiles back to holdings
-quantiles[] = 0
-for(sector in sectors)
-	quantiles = quantiles + sector.quantiles[,sector] * rep.row(info$sector==sector, nperiod.ends)
-
-# each period allocate to sectors 1,2,3 and 9,10,11 and middle 4,5,6,7,8
-
-# top 30%
-signal.top = ntop(quantiles > 8, n)	
-
-obj$weights$MG.6.1.top = signal.top
-
-obj$weights$MG.6.6.top = hold.position(signal.top, 6)
-
-
-# bottom 30%
-signal.bot = ntop(quantiles <= 3, n)	
-
-obj$weights$MG.6.1.bot = signal.bot
-
-obj$weights$MG.6.6.bot = hold.position(signal.bot, 6)
-
-# middle 40%
-signal.mid = ntop(quantiles > 3 & quantiles <= 8, n)	
-
-obj$weights$MG.6.1.mid = signal.mid
-
-obj$weights$MG.6.6.mid = hold.position(signal.mid, 6)
-
-
-# spread
-obj$weights$MG.6.1.spread = signal.top - signal.bot
-
-obj$weights$MG.6.6.spread = hold.position(signal.top, 6) - hold.position(signal.bot, 6)
-
-
-#*****************************************************************
-# Report
-#*****************************************************************
-models = create.models(obj, data, open)
-	
-stats = plotbt.strategy.sidebyside(models, make.plot=F, return.table=T)
-	
-cagr = sapply(stats['Cagr',],as.numeric)	
-	
-
-print(cagr[spl('ew,mcw')])
-{% endhighlight %}
+Summary CAGR Performance table:
 
 
 
@@ -417,22 +83,6 @@ print(cagr[spl('ew,mcw')])
 | 17.84| 10.21|
     
 
-
-
-
-{% highlight r %}
-temp = rbind(
-	JT.6.1=cagr[spl('JT.6.1.top,JT.6.1.mid,JT.6.1.bot,JT.6.1.spread')],
-	JT.6.6=cagr[spl('JT.6.6.top,JT.6.6.mid,JT.6.6.bot,JT.6.6.spread')],
-	High52w.6.1.=cagr[spl('high52w.1.top,high52w.1.mid,high52w.1.bot,high52w.1.spread')],
-	high52w.6.6.=cagr[spl('high52w.6.top,high52w.6.mid,high52w.6.bot,high52w.6.spread')],
-	MG.6.1=cagr[spl('MG.6.1.top,MG.6.1.mid,MG.6.1.bot,MG.6.1.spread')],
-	MG.6.6=cagr[spl('MG.6.6.top,MG.6.6.mid,MG.6.6.bot,MG.6.6.spread')]
-)
-colnames(temp) = spl('Top,Middle,Bottom,Spread')
-
-print(temp)
-{% endhighlight %}
 
 
 
